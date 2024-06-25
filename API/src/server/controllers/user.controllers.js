@@ -1,25 +1,28 @@
 import { userRegister, userLogin } from "../models/user.models.js";
-import jwtoken from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
 
 export const userRegisterControl = async (req, res) => {
     try {
-        const { email, password, rol, lenguaje } = req.body
-        const jewels = await jewelsData({ limits, order_by, page })
-        const hateoas = await generateHATEOAS('joya', jewels)
-        res.status(201).json({ message: 'usuario creado con exito' })
+        let { email, password, rol, lenguaje } = req.body
+        const passwordEncriptada = bcrypt.hashSync(password)
+        password = passwordEncriptada
+        await pool.query(userRegister, email, passwordEncriptada, rol, lenguaje)
     } catch (error) {
-        console.error('Error retrieving joyas:', error)
-        res.status(500).json({ message: 'Internal server error' })
+        console.log(error)
+        res.status(error.code || 500).send(error)
     }
 }
 
+
 export const userLoginControl = async (req, res) => {
     try {
-        const { precio_max, precio_min, categoria, metal } = req.body
-        const joyas = await jewelsDataFilters({ precio_max, precio_min, categoria, metal })
-        res.status(200).json(joyas)
+        const { email, password } = req.body
+        await verificarCredenciales(email, password)
+        const token = jwt.sign({ email }, "az_AZ")
+        res.send(token)
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        console.log(error)
+        res.status(error.code || 500).send(error)
     }
 }
 
